@@ -8,14 +8,12 @@ export const signUp = (formValues)=> async dispatch=> {
 
 }
 
-export const signIn = (userID)=>{
-    return{
-        type: SIGN_IN,
-        payload: userID
-    }
+export const signIn = (formValues)=> async dispatch =>{
+    const response = await UserApi.get('/users', formValues);
+    dispatch({type: SIGN_IN, payload: response.data})
 }
 
-export const signOut = (userID)=>{
+export const signOut = ()=>{
     return{
         type: SIGN_OUT
     }

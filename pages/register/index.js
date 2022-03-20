@@ -1,8 +1,14 @@
 import { Field, reduxForm } from 'redux-form';
 import { signUp } from '../../redux-src/actions/'
 import { connect } from 'react-redux'
+import axios from 'axios';
 
 export const Register = (props) => {
+
+  const checkEmailExistence = (serverUser, formData)=>{
+    const user = serverUser.find(user=> user.email === formData.email);
+    if(user) return user;
+  }
   const  renderError =({ error, touched })=> {
         if (touched && error) {
           return (
@@ -12,19 +18,27 @@ export const Register = (props) => {
           );
         }
       }
-  const renderInput = ({ input, label, meta }) => {
+  const renderInput = ({ input, label, meta, type }) => {
         const className = `field ${meta.error && meta.touched ? 'error' : ''}`;
         return (
           <div className={className}>
             <label>{label}</label>
-            <input {...input} autoComplete="off" />
+            <input {...input} autoComplete="new-password" type={type} required autoSave='off' />
             {renderError(meta)}
           </div>
         );
       };
-     const onSubmit =(formValues)=> {
-         props.signUp(formValues);
+     const onSubmit = async (formValues)=> {
+       const user = await axios.get("http://localhost:3001/users").then((res)=> checkEmailExistence(res.data, formValues));
+       if(user){
+         console.log('user already exist');
+       }else{
+        props.signUp(formValues);
         console.log(formValues);
+       }
+         
+    
+
       }
      
     return (
@@ -35,11 +49,17 @@ export const Register = (props) => {
                 onSubmit={props.handleSubmit(onSubmit)}
                 className="ui form error"
             >
-                <Field name="title" component={renderInput} label="Enter Title" />
+                <Field 
+                    name="email" 
+                    component={renderInput} 
+                    label="Enter Email" 
+                    type="text"
+                />
                 <Field
-                    name="description"
+                    name="password"
                     component={renderInput}
-                    label="Enter Description"
+                    label="Enter Password"
+                    type="password"
                 />
                 <button className="ui button primary">Submit</button>
             </form>
@@ -47,17 +67,26 @@ export const Register = (props) => {
     )
 }
 
-
+function isEmail(val) {
+  let regEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  if(!regEmail.test(val)){
+    return 'Invalid Email';
+  }
+}
 const validate = formValues => {
     const errors = {};
   
-    if (!formValues.title) {
-      errors.title = 'You must enter a title';
+    if (!formValues.email) {
+      errors.email = 'You must enter a email';
     }
   
-    if (!formValues.description) {
-      errors.description = 'You must enter a description';
+    if (!formValues.password) {
+      errors.password = 'You must enter a password';
     }
+
+    if (isEmail(formValues.email)) {
+        errors.email = "in valid email"
+    } 
   
     return errors;
   };
